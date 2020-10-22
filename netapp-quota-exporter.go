@@ -90,14 +90,14 @@ func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	for _, condition := range c.conditions {
-		qtrees, err := c.GetQuotas(condition)
+		quotas, err := c.GetQuotas(condition)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 
-		for _, qtree := range qtrees {
-			send := func(desc *prometheus.Desc, value string, qtree netapp.QuotaReportEntry, ch chan<- prometheus.Metric) {
+		for _, q := range quotas {
+			send := func(desc *prometheus.Desc, value string, quota netapp.QuotaReportEntry, ch chan<- prometheus.Metric) {
 				intValue, err := strconv.Atoi(value)
 				if err != nil {
 					return
@@ -106,13 +106,13 @@ func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 					desc,
 					prometheus.GaugeValue,
 					(float64)(intValue),
-					qtree.Tree, qtree.Volume, qtree.Vserver,
+					quota.Tree, quota.Volume, quota.Vserver,
 				)
 			}
-			send(diskLimit, qtree.DiskLimit, qtree, ch)
-			send(diskUsed, qtree.DiskUsed, qtree, ch)
-			send(fileLimit, qtree.DiskLimit, qtree, ch)
-			send(fileUsed, qtree.DiskLimit, qtree, ch)
+			send(diskLimit, q.DiskLimit, q, ch)
+			send(diskUsed, q.DiskUsed, q, ch)
+			send(fileLimit, q.DiskLimit, q, ch)
+			send(fileUsed, q.DiskLimit, q, ch)
 		}
 	}
 }
