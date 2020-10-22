@@ -61,7 +61,7 @@ func (m *quotaCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, condition := range c.conditions {
-		qtrees, err := c.GetQtrees(condition)
+		qtrees, err := c.GetQuotas(condition)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -88,7 +88,7 @@ func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (c quotaCollector) GetQtrees(q QuotaSeachCondition) ([]netapp.QuotaReportEntry, error) {
+func (c quotaCollector) GetQuotas(q QuotaSeachCondition) ([]netapp.QuotaReportEntry, error) {
 	nextTag := ""
 
 	qtrees := []netapp.QuotaReportEntry{}
