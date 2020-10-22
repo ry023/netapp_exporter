@@ -183,11 +183,12 @@ func loadConfig(path string) (*Config, error) {
 func main() {
 	configPath := kingpin.Flag("config", "Config file path").Default("/etc/netapp_quota_exporter.conf").String()
 
+	kingpin.Parse()
 	config, err := loadConfig(*configPath)
 	if err != nil {
 		os.Exit(2)
 	}
-	c, err := NewQuotaCollector( config.Endpoint, config.User, config.Password, config.QuotaSearchCondition, )
+	c, err := NewQuotaCollector(config.Endpoint, config.User, config.Password, config.QuotaSearchCondition)
 	if err != nil {
 		os.Exit(3)
 	}
