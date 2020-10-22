@@ -45,6 +45,13 @@ var (
 		[]string{"qtree", "volume", "vserver"},
 		nil,
 	)
+
+	status = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "status"),
+		"Quota status of volume",
+		[]string{"volume", "vserver", "status"},
+		nil,
+	)
 )
 
 type quotaCollector struct {
@@ -57,9 +64,31 @@ func (m *quotaCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- diskUsed
 	ch <- fileLimit
 	ch <- fileUsed
+	ch <- status
 }
 
 func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
+	volumes, err := c.GetVolumeSpaces()
+
+	if err == nil {
+		for _, v := range volumes {
+			s, err := c.GetQuotaStatus(v)
+			if err != nil {
+				continue
+			}
+
+			if s == "" {
+				continue
+			}
+			ch <- prometheus.MustNewConstMetric(
+				status,
+				prometheus.GaugeValue,
+				1,
+				v.Volume, v.Vserver, s,
+			)
+		}
+	}
+
 	for _, condition := range c.conditions {
 		qtrees, err := c.GetQuotas(condition)
 		if err != nil {
