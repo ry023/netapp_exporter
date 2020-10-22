@@ -118,6 +118,22 @@ func (c quotaCollector) GetQuotas(q QuotaSeachCondition) ([]netapp.QuotaReportEn
 	return qtrees, nil
 }
 
+func (c quotaCollector) GetVolumeSpaces() ([]netapp.VolumeSpaceInfo, error) {
+	r, _, err := c.client.VolumeSpace.List(nil)
+	if err != nil {
+		return nil, err
+	}
+	return r.Results.AttributesList.SpaceInfo, nil
+}
+
+func (c quotaCollector) GetQuotaStatus(v netapp.VolumeSpaceInfo) (string, error) {
+	r, _, err := c.client.Quota.Status(v.Vserver, v.Volume)
+	if err != nil {
+		return "", err
+	}
+	return r.Results.QuotaStatus, nil
+}
+
 type QuotaSeachCondition struct {
 	Qtree   string
 	Volume  string
@@ -187,8 +203,6 @@ func main() {
 	}
 
 	prometheus.Register(c)
-
 	http.Handle("/metrics", promhttp.Handler())
-
 	http.ListenAndServe(":2112", nil)
 }
