@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/pepabo/go-netapp/netapp"
@@ -61,38 +60,32 @@ func (m *quotaCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
-	wg := &sync.WaitGroup{}
 	for _, condition := range c.conditions {
-		wg.Add(1)
-		go func(cond QuotaSeachCondition, ch chan<- prometheus.Metric) {
-			defer wg.Done()
-			qtrees, err := c.GetQtrees(cond)
-			if err != nil {
-				fmt.Println(err.Error())
-				return
-			}
+		qtrees, err := c.GetQtrees(condition)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
-			for _, qtree := range qtrees {
-				send := func(desc *prometheus.Desc, value string, qtree netapp.QuotaReportEntry, ch chan<- prometheus.Metric) {
-					intValue, err := strconv.Atoi(value)
-					if err != nil {
-						return
-					}
-					ch <- prometheus.MustNewConstMetric(
-						desc,
-						prometheus.GaugeValue,
-						(float64)(intValue),
-						qtree.Tree, qtree.Volume, qtree.Vserver,
-					)
+		for _, qtree := range qtrees {
+			send := func(desc *prometheus.Desc, value string, qtree netapp.QuotaReportEntry, ch chan<- prometheus.Metric) {
+				intValue, err := strconv.Atoi(value)
+				if err != nil {
+					return
 				}
-				send(diskLimit, qtree.DiskLimit, qtree, ch)
-				send(diskUsed, qtree.DiskUsed, qtree, ch)
-				send(fileLimit, qtree.DiskLimit, qtree, ch)
-				send(fileUsed, qtree.DiskLimit, qtree, ch)
+				ch <- prometheus.MustNewConstMetric(
+					desc,
+					prometheus.GaugeValue,
+					(float64)(intValue),
+					qtree.Tree, qtree.Volume, qtree.Vserver,
+				)
 			}
-		}(condition, ch)
+			send(diskLimit, qtree.DiskLimit, qtree, ch)
+			send(diskUsed, qtree.DiskUsed, qtree, ch)
+			send(fileLimit, qtree.DiskLimit, qtree, ch)
+			send(fileUsed, qtree.DiskLimit, qtree, ch)
+		}
 	}
-	wg.Wait()
 }
 
 func (c quotaCollector) GetQtrees(q QuotaSeachCondition) ([]netapp.QuotaReportEntry, error) {
