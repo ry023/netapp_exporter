@@ -2,14 +2,18 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
-
+	"os"
+	"strconv"
 	"sync"
+	"time"
+
 	"github.com/pepabo/go-netapp/netapp"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"strconv"
-	"time"
+	"gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/yaml.v2"
 )
 
 const namespace string = "netapp_quota"
@@ -59,9 +63,9 @@ func (m *quotaCollector) Describe(ch chan<- *prometheus.Desc) {
 func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 	wg := &sync.WaitGroup{}
 	for _, condition := range c.conditions {
-    wg.Add(1)
+		wg.Add(1)
 		go func(cond QuotaSeachCondition, ch chan<- prometheus.Metric) {
-      defer wg.Done()
+			defer wg.Done()
 			qtrees, err := c.GetQtrees(cond)
 			if err != nil {
 				fmt.Println(err.Error())
@@ -88,7 +92,7 @@ func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 			}
 		}(condition, ch)
 	}
-  wg.Wait()
+	wg.Wait()
 }
 
 func (c quotaCollector) GetQtrees(q QuotaSeachCondition) ([]netapp.QuotaReportEntry, error) {
@@ -151,16 +155,43 @@ func NewQuotaCollector(endpoint, user, password string, conditions []QuotaSeachC
 	}, nil
 }
 
-func main() {
-	c, err := NewQuotaCollector(
-		"https://localhost:1443",
-		"",
-		"",
-		[]QuotaSeachCondition{},
-	)
+type Config struct {
+	Endpoint string
+	User     string
+	Password string
+
+	QuotaSearchCondition []QuotaSeachCondition `yaml:"quota_search_condition"`
+}
+
+func loadConfig(path string) (*Config, error) {
+	b, err := ioutil.ReadFile(path)
+
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+	config := &Config{}
+	if err := yaml.Unmarshal(b, config); err != nil {
+		return nil, err
+	}
+
+	if len(config.QuotaSearchCondition) == 0 {
+		config.QuotaSearchCondition = []QuotaSeachCondition{{}}
+	}
+	return config, nil
+}
+
+func main() {
+	configPath := kingpin.Flag("config", "Config file path").Default("/etc/netapp_quota_exporter.conf").String()
+
+	config, err := loadConfig(*configPath)
+	if err != nil {
+		os.Exit(2)
+	}
+	c, err := NewQuotaCollector( config.Endpoint, config.User, config.Password, config.QuotaSearchCondition, )
+	if err != nil {
+		os.Exit(3)
+	}
+
 	prometheus.Register(c)
 
 	http.Handle("/metrics", promhttp.Handler())
