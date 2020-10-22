@@ -1,9 +1,9 @@
-# netapp-quota-exporter
+# netapp-exporter
 
-export netapp quota for prometheus
+export netapp information
 
 ```
-netapp_quota_exporter --config /path/to/config.yaml
+netapp_exporter --config /path/to/config.yaml
 ```
 
 ### config
