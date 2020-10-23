@@ -9,6 +9,6 @@ ENV GOARCH=amd64
 COPY . /opt
 RUN go build -o ./netapp_exporter netapp_exporter.go
 
-FROM alpine:latest
+FROM ubuntu:latest
 
 COPY --from=build /opt/netapp_exporter /opt/netapp_exporter
