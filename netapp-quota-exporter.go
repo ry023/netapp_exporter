@@ -247,22 +247,11 @@ func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 
 		for _, q := range quotas {
-			send := func(desc *prometheus.Desc, value string, quota netapp.QuotaReportEntry, ch chan<- prometheus.Metric) {
-				intValue, err := strconv.Atoi(value)
-				if err != nil {
-					return
-				}
-				ch <- prometheus.MustNewConstMetric(
-					desc,
-					prometheus.GaugeValue,
-					(float64)(intValue),
-					quota.Tree, quota.Volume, quota.Vserver,
-				)
-			}
-			send(diskLimit, q.DiskLimit, q, ch)
-			send(diskUsed, q.DiskUsed, q, ch)
-			send(fileLimit, q.DiskLimit, q, ch)
-			send(fileUsed, q.DiskLimit, q, ch)
+			// export quota metrics
+			sendQuotaMetric(diskLimit, q.DiskLimit, q, ch)
+			sendQuotaMetric(diskUsed, q.DiskUsed, q, ch)
+			sendQuotaMetric(fileLimit, q.DiskLimit, q, ch)
+			sendQuotaMetric(fileUsed, q.DiskLimit, q, ch)
 		}
 	}
 }
