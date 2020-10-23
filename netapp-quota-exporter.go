@@ -123,16 +123,16 @@ var (
 		nil,
 	)
 
-	volumeSnapshotUsedBytes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_snapshot_used_bytes"),
-		"Snapshot usage of volume (bytes)",
+	volumeSnapshotReserveUsedBytes = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "volume_snapshot_reserve_used_bytes"),
+		"Snapshot reserve usage of volume (bytes)",
 		[]string{"volume", "vserver"},
 		nil,
 	)
 
-	volumeSnapshotUseRate = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_snapshot_use_rate"),
-		"Snapshot use rate of volume",
+	volumeSnapshotReserveUseRate = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "volume_snapshot_reserve_use_rate"),
+		"Snapshot reserve use rate of volume",
 		[]string{"volume", "vserver"},
 		nil,
 	)
@@ -151,25 +151,91 @@ func (m *quotaCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- status
 }
 
+// go-netappからの取得値はint or stringなので、exporter用にfloat64に変換する
+func toFloat(val interface{}) (float64, error) {
+	floatVal, isFloat := val.(float64)
+	if isFloat {
+		// already float
+		return floatVal, nil
+	}
+	intVal, isInt := val.(int)
+
+	if isInt {
+		return (float64)(intVal), nil
+	}
+
+	strVal, isStr := val.(string)
+	if isStr {
+		intVal, err := strconv.Atoi(strVal)
+		if err != nil {
+			return 0.0, err
+		}
+		return (float64)(intVal), nil
+	}
+
+	return 0.0, fmt.Errorf("value (%v) is neither Int or String or Float", val)
+}
+
+func sendMetric(desc *prometheus.Desc, value interface{}, labels []string, ch chan<- prometheus.Metric) {
+	metricVal, err := toFloat(value)
+	if err != nil {
+		return
+	}
+
+	ch <- prometheus.MustNewConstMetric(
+		desc,
+		prometheus.GaugeValue,
+		metricVal,
+		labels...,
+	)
+}
+
+func sendQuotaMetric(desc *prometheus.Desc, value interface{}, quota netapp.QuotaReportEntry, ch chan<- prometheus.Metric) {
+	sendMetric(desc, value, []string{quota.Tree, quota.Volume, quota.Vserver}, ch)
+}
+
+func sendVolumeMetric(desc *prometheus.Desc, value interface{}, volume netapp.VolumeSpaceInfo, ch chan<- prometheus.Metric) {
+	sendMetric(desc, value, []string{volume.Volume, volume.Vserver}, ch)
+}
+
+func sendVolumeRateMetric(desc *prometheus.Desc, value interface{}, volume netapp.VolumeSpaceInfo, ch chan<- prometheus.Metric) {
+	floatVal, err := toFloat(value)
+	if err != nil {
+		return
+	}
+	// go-netappからはパーセントで取得されるので、比率に変換する(exporterのベストプラクティス)
+	sendVolumeMetric(desc, floatVal/100, volume, ch)
+}
+
 func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 	volumes, err := c.GetVolumeSpaces()
 
 	if err == nil {
 		for _, v := range volumes {
+			// export volume value
+			sendVolumeMetric(volumeTotalUsedBytes, v.TotalUsed, v, ch)
+			sendVolumeMetric(volumePhysicalUsedBytes, v.PhysicalUsed, v, ch)
+			sendVolumeMetric(volumeUserUsedBytes, v.UserData, v, ch)
+			sendVolumeMetric(volumeFilesystemMetadataUsedBytes, v.FilesystemMetadata, v, ch)
+			sendVolumeMetric(volumePerformanceMetadataUsedBytes, v.PerformanceMetadata, v, ch)
+			sendVolumeMetric(volumeSnapshotReserveUsedBytes, v.SnapshotReserve, v, ch)
+
+			// export volume use rate
+			sendVolumeRateMetric(volumeTotalUseRate, v.TotalUsed, v, ch)
+			sendVolumeRateMetric(volumePhysicalUseRate, v.PhysicalUsed, v, ch)
+			sendVolumeRateMetric(volumeUserUseRate, v.UserData, v, ch)
+			sendVolumeRateMetric(volumeFilesystemMetadataUseRate, v.FilesystemMetadata, v, ch)
+			sendVolumeRateMetric(volumePerformanceMetadataUseRate, v.PerformanceMetadata, v, ch)
+			sendVolumeRateMetric(volumeSnapshotReserveUseRate, v.SnapshotReserve, v, ch)
+
 			s, err := c.GetQuotaStatus(v)
 			if err != nil {
 				continue
 			}
-
 			if s == "" {
 				continue
 			}
-			ch <- prometheus.MustNewConstMetric(
-				status,
-				prometheus.GaugeValue,
-				1,
-				v.Volume, v.Vserver, s,
-			)
+			ch <- prometheus.MustNewConstMetric(status, prometheus.GaugeValue, 1, v.Volume, v.Vserver, s)
 		}
 	}
 
