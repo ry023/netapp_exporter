@@ -337,14 +337,20 @@ type SearchConfig struct {
 }
 
 func loadSearchConfig(path string) (*SearchConfig, error) {
-	b, err := ioutil.ReadFile(path)
-
-	if err != nil {
-		return nil, err
-	}
 	config := &SearchConfig{}
-	if err := yaml.Unmarshal(b, config); err != nil {
-		return nil, err
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		switch err.(type) {
+		case *os.PathError:
+			// skip if notfound
+		default:
+			return nil, err
+		}
+	} else {
+		if err := yaml.Unmarshal(b, config); err != nil {
+			return nil, err
+		}
 	}
 
 	if len(config.QuotaSearchCondition) == 0 {
@@ -364,10 +370,12 @@ func main() {
 	kingpin.Parse()
 	sconf, err := loadSearchConfig(*configPath)
 	if err != nil {
+		fmt.Println(err)
 		os.Exit(2)
 	}
 	c, err := NewQuotaCollector(*endpoint, *user, *password, sconf.QuotaSearchCondition)
 	if err != nil {
+		fmt.Println(err)
 		os.Exit(3)
 	}
 
