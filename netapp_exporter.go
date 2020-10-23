@@ -332,21 +332,17 @@ func NewQuotaCollector(endpoint, user, password string, conditions []QuotaSeachC
 	}, nil
 }
 
-type Config struct {
-	Endpoint string
-	User     string
-	Password string
-
+type SearchConfig struct {
 	QuotaSearchCondition []QuotaSeachCondition `yaml:"quota_search_condition"`
 }
 
-func loadConfig(path string) (*Config, error) {
+func loadSearchConfig(path string) (*SearchConfig, error) {
 	b, err := ioutil.ReadFile(path)
 
 	if err != nil {
 		return nil, err
 	}
-	config := &Config{}
+	config := &SearchConfig{}
 	if err := yaml.Unmarshal(b, config); err != nil {
 		return nil, err
 	}
@@ -358,19 +354,24 @@ func loadConfig(path string) (*Config, error) {
 }
 
 func main() {
-	configPath := kingpin.Flag("config", "Config file path").Default("/etc/netapp_quota_exporter.conf").String()
+	configPath := kingpin.Flag("api.search-config", "search Config file path").Default("/etc/netapp_quota_exporter.conf").String()
+	endpoint := kingpin.Flag("api.endpoint", "NetApp API endpoint").String()
+	user := kingpin.Flag("api.user", "NetApp API auth user").String()
+	password := kingpin.Flag("api.password", "NetApp API auth password").String()
+	listenAddress := kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9797").String()
+	metricsPath := kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
 
 	kingpin.Parse()
-	config, err := loadConfig(*configPath)
+	sconf, err := loadSearchConfig(*configPath)
 	if err != nil {
 		os.Exit(2)
 	}
-	c, err := NewQuotaCollector(config.Endpoint, config.User, config.Password, config.QuotaSearchCondition)
+	c, err := NewQuotaCollector(*endpoint, *user, *password, sconf.QuotaSearchCondition)
 	if err != nil {
 		os.Exit(3)
 	}
 
 	prometheus.Register(c)
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":2112", nil)
+	http.Handle(*metricsPath, promhttp.Handler())
+	http.ListenAndServe(*listenAddress, nil)
 }

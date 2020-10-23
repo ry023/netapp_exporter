@@ -3,26 +3,20 @@
 export netapp information
 
 ```
-netapp_exporter --config /path/to/config.yaml
+netapp_exporter \
+  --api.endpoint="https://netapp-api:1443/" \
+  --api.user="you" \
+  --api.password="YOUR_PASSWORD" \
+  --web.listen-address=":9797" \
+  --web.telemetry-path="/metrics"
 ```
 
-### config
-
-```yaml
-endpoint: "https://netapp-api-address:1443/"
-user: "user"
-password: "password"
-```
-
-Use `quota_search_condition` if you want to filter quota searches.
+Use `--api.search-config` flag and create a config file if you want to filter quota searches.
 (This is useful when there are too many quotas and the API request takes a long time.)
 
 The following example exports all quotas on volume1 and a quota of qtree1 on volume2.
 
 ```yaml
-endpoint: "https://netapp-api-address:1443/"
-user: "user"
-password: "password"
 quota_search_condition:
 - volume: "volume1"
 - volume: "volume2"
