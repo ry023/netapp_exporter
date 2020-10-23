@@ -19,14 +19,14 @@ const namespace string = "netapp"
 
 var (
 	diskLimit = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "quota_disk_limit"),
+		prometheus.BuildFQName(namespace, "", "quota_disk_limit_bytes"),
 		"Qtree disk soft limit in bytes",
 		[]string{"qtree", "volume", "vserver"},
 		nil,
 	)
 
 	diskUsed = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "quota_disk_use"),
+		prometheus.BuildFQName(namespace, "", "quota_disk_use_bytes"),
 		"Qtree disk current use in bytes",
 		[]string{"qtree", "volume", "vserver"},
 		nil,
