@@ -250,8 +250,8 @@ func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 			// export quota metrics
 			sendQuotaMetric(diskLimit, q.DiskLimit, q, ch)
 			sendQuotaMetric(diskUsed, q.DiskUsed, q, ch)
-			sendQuotaMetric(fileLimit, q.DiskLimit, q, ch)
-			sendQuotaMetric(fileUsed, q.DiskLimit, q, ch)
+			sendQuotaMetric(fileLimit, q.FileLimit, q, ch)
+			sendQuotaMetric(fileUsed, q.FilesUsed, q, ch)
 		}
 	}
 }
