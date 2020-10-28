@@ -19,15 +19,15 @@ const namespace string = "netapp"
 
 var (
 	diskLimit = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "quota_disk_limit_bytes"),
-		"Qtree disk soft limit in bytes",
+		prometheus.BuildFQName(namespace, "", "quota_disk_limit_kbytes"),
+		"Qtree disk soft limit in kbytes",
 		[]string{"qtree", "volume", "vserver"},
 		nil,
 	)
 
 	diskUsed = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "quota_disk_use_bytes"),
-		"Qtree disk current use in bytes",
+		prometheus.BuildFQName(namespace, "", "quota_disk_use_kbytes"),
+		"Qtree disk current use in kbytes",
 		[]string{"qtree", "volume", "vserver"},
 		nil,
 	)
@@ -54,8 +54,8 @@ var (
 	)
 
 	volumeTotalUsedBytes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_total_used_bytes"),
-		"Total usage of volume (bytes)",
+		prometheus.BuildFQName(namespace, "", "volume_total_used_kbytes"),
+		"Total usage of volume (kbytes)",
 		[]string{"volume", "vserver"},
 		nil,
 	)
@@ -68,8 +68,8 @@ var (
 	)
 
 	volumePhysicalUsedBytes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_physical_used_bytes"),
-		"Physical usage of volume (bytes)",
+		prometheus.BuildFQName(namespace, "", "volume_physical_used_kbytes"),
+		"Physical usage of volume (kbytes)",
 		[]string{"volume", "vserver"},
 		nil,
 	)
@@ -82,8 +82,8 @@ var (
 	)
 
 	volumeUserUsedBytes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_user_used_bytes"),
-		"User usage of volume (bytes)",
+		prometheus.BuildFQName(namespace, "", "volume_user_used_kbytes"),
+		"User usage of volume (kbytes)",
 		[]string{"volume", "vserver"},
 		nil,
 	)
@@ -96,8 +96,8 @@ var (
 	)
 
 	volumeFilesystemMetadataUsedBytes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_filesystem_metadata_used_bytes"),
-		"FilesystemMetadata usage of volume (bytes)",
+		prometheus.BuildFQName(namespace, "", "volume_filesystem_metadata_used_kbytes"),
+		"FilesystemMetadata usage of volume (kbytes)",
 		[]string{"volume", "vserver"},
 		nil,
 	)
@@ -110,8 +110,8 @@ var (
 	)
 
 	volumePerformanceMetadataUsedBytes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_performance_metadata_used_bytes"),
-		"PerformanceMetadata usage of volume (bytes)",
+		prometheus.BuildFQName(namespace, "", "volume_performance_metadata_used_kbytes"),
+		"PerformanceMetadata usage of volume (kbytes)",
 		[]string{"volume", "vserver"},
 		nil,
 	)
@@ -124,8 +124,8 @@ var (
 	)
 
 	volumeSnapshotReserveUsedBytes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "volume_snapshot_reserve_used_bytes"),
-		"Snapshot reserve usage of volume (bytes)",
+		prometheus.BuildFQName(namespace, "", "volume_snapshot_reserve_used_kbytes"),
+		"Snapshot reserve usage of volume (kbytes)",
 		[]string{"volume", "vserver"},
 		nil,
 	)
