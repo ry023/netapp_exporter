@@ -22,3 +22,25 @@ quota_search_condition:
 - volume: "volume2"
   qtree: "qtree-1"
 ```
+
+### metrics
+
+| metric                                         | label                   |
+| ---------------------------------------------- | ----------------------- |
+| netapp_quota_disk_limit_kbytes                 | qtree, volume, vserver  |
+| netapp_quota_disk_use_kbytes                   | qtree, volume, vserver  |
+| netapp_quota_file_limit                        | qtree, volume, vserver  |
+| netapp_quota_file_use                          | qtree, volume, vserver  |
+| netapp_quota_status                            | volume, vserver, status |
+| netapp_volume_filesystem_metadata_used_kbytes  | volume, vserver         |
+| netapp_volume_filesystem_metadata_use_rate     | volume, vserver         |
+| netapp_volume_performance_metadata_used_kbytes | volume, vserver         |
+| netapp_volume_performance_metadata_use_rate    | volume, vserver         |
+| netapp_volume_physical_used_kbytes             | volume, vserver         |
+| netapp_volume_physical_use_rate                | volume, vserver         |
+| netapp_volume_snapshot_reserve_used_kbytes     | volume, vserver         |
+| netapp_volume_snapshot_reserve_use_rate        | volume, vserver         |
+| netapp_volume_total_used_kbytes                | volume, vserver         |
+| netapp_volume_total_use_rate                   | volume, vserver         |
+| netapp_volume_user_used_kbytes                 | volume, vserver         |
+| netapp_volume_user_use_rate                    | volume, vserver         |
