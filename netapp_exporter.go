@@ -221,12 +221,12 @@ func (c quotaCollector) Collect(ch chan<- prometheus.Metric) {
 			sendVolumeMetric(volumeSnapshotReserveUsedBytes, v.SnapshotReserve, v, ch)
 
 			// export volume use rate
-			sendVolumeRateMetric(volumeTotalUseRate, v.TotalUsed, v, ch)
-			sendVolumeRateMetric(volumePhysicalUseRate, v.PhysicalUsed, v, ch)
-			sendVolumeRateMetric(volumeUserUseRate, v.UserData, v, ch)
-			sendVolumeRateMetric(volumeFilesystemMetadataUseRate, v.FilesystemMetadata, v, ch)
-			sendVolumeRateMetric(volumePerformanceMetadataUseRate, v.PerformanceMetadata, v, ch)
-			sendVolumeRateMetric(volumeSnapshotReserveUseRate, v.SnapshotReserve, v, ch)
+			sendVolumeRateMetric(volumeTotalUseRate, v.TotalUsedPercent, v, ch)
+			sendVolumeRateMetric(volumePhysicalUseRate, v.PhysicalUsedPercent, v, ch)
+			sendVolumeRateMetric(volumeUserUseRate, v.UserDataPercent, v, ch)
+			sendVolumeRateMetric(volumeFilesystemMetadataUseRate, v.FilesystemMetadataPercent, v, ch)
+			sendVolumeRateMetric(volumePerformanceMetadataUseRate, v.PerformanceMetadataPercent, v, ch)
+			sendVolumeRateMetric(volumeSnapshotReserveUseRate, v.SnapshotReservePercent, v, ch)
 
 			s, err := c.GetQuotaStatus(v)
 			if err != nil {
